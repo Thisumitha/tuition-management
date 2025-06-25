@@ -7,6 +7,7 @@ import Report from "./pages/Report";
 import Registration from "./pages/Registration";
 import Shedular from "./pages/Shedular";
 import Navbar from "./components/Navbar";
+import Login from "./pages/login";
 function App() {
   return (
     <BrowserRouter>
@@ -20,6 +21,8 @@ function App() {
         <Route path="/attendance" element={<Attendance />} />
         <Route path="/report" element={<Report />} />
         <Route path="/shedular" element={<Shedular />} />
+        <Route path="/login" element={<Login />} />
+        {/* Add more routes as needed */}
 
 
       </Routes>
