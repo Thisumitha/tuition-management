@@ -2,6 +2,8 @@ import { Link } from "react-router-dom";
 
 const Dashboard = () => {
   return (
+    
+    
     <div className="min-h-screen flex flex-col items-center justify-center bg-light px-4 py-8">
       <div className="max-w-5xl w-full bg-white shadow rounded-lg p-6">
         <h1 className="text-center text-3xl font-bold text-primary mb-4">Dashboard</h1>
@@ -39,8 +41,8 @@ const Dashboard = () => {
 
         {/* Action Buttons */}
         <div className="d-grid gap-3">
-          <Link to="/studentreg" className="btn btn-primary btn-lg">
-            ➕ Add New Student
+          <Link to="/register" className="btn btn-primary btn-lg">
+            ➕ Add New Student/Teacher
           </Link>
           <Link to="/students" className="btn btn-info btn-lg text-white">
             📋 List of Students
@@ -57,6 +59,7 @@ const Dashboard = () => {
         </div>
       </div>
     </div>
+    
   );
 };
 
