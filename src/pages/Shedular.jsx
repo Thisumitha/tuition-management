@@ -1,4 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import axios from "axios";
+
 const weekDays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 const defaultTimeSlots = ['08:00–09:00', '09:00–10:00', '10:00–11:00', '11:00–12:00', '13:00–14:00', '14:00–15:00', '15:00–16:00'];
 
@@ -12,19 +14,36 @@ const Scheduler = () => {
     timeSlot: '',
   });
 
+  const api = "http://localhost:8080/api/halls";
+
+  // Load classes from backend on mount
+  useEffect(() => {
+    fetchClasses();
+  }, []);
+
+  const fetchClasses = () => {
+    axios
+      .get(api)
+      .then((res) => setClasses(res.data))
+      .catch((err) => console.error("Failed to load classes:", err));
+  };
+
   const handleChange = (e) => {
     setForm({ ...form, [e.target.name]: e.target.value });
   };
 
   const handleAddClass = () => {
     if (!form.className || !form.teacher || !form.day || !form.timeSlot) {
-      alert('Please fill all fields.');
+      alert('❗ Please fill all fields.');
       return;
     }
 
     const newClass = {
-      ...form,
+      className: form.className,
+      teacher: form.teacher,
       students: form.students.split(',').map((s) => s.trim()),
+      day: form.day,
+      timeSlot: form.timeSlot,
     };
 
     const isSlotTaken = classes.find(
@@ -32,26 +51,24 @@ const Scheduler = () => {
     );
 
     if (isSlotTaken) {
-      alert('This time slot is already taken.');
+      alert('⚠️ This time slot is already taken.');
       return;
     }
 
-    setClasses([...classes, newClass]);
-    setForm({
-      className: '',
-      teacher: '',
-      students: '',
-      day: '',
-      timeSlot: '',
-    });
+    axios.post(api, newClass)
+      .then(() => {
+        alert("✅ Class scheduled successfully!");
+        fetchClasses();
+        setForm({ className: '', teacher: '', students: '', day: '', timeSlot: '' });
+      })
+      .catch(() => alert("❌ Failed to save class."));
   };
 
   const getSlotContent = (day, slot) => {
     const cls = classes.find((c) => c.day === day && c.timeSlot === slot);
     return cls ? (
       <>
-        <strong>{cls.className}</strong>
-        <br />
+        <strong>{cls.className}</strong><br />
         <span className="text-muted" style={{ fontSize: '0.85rem' }}>{cls.teacher}</span>
       </>
     ) : (
@@ -95,21 +112,13 @@ const Scheduler = () => {
           <div className="col-md-6">
             <select name="day" value={form.day} onChange={handleChange} className="form-select">
               <option value="">Select Day</option>
-              {weekDays.map((d) => (
-                <option key={d} value={d}>
-                  {d}
-                </option>
-              ))}
+              {weekDays.map((d) => <option key={d}>{d}</option>)}
             </select>
           </div>
           <div className="col-md-6">
             <select name="timeSlot" value={form.timeSlot} onChange={handleChange} className="form-select">
               <option value="">Select Time Slot</option>
-              {defaultTimeSlots.map((t) => (
-                <option key={t} value={t}>
-                  {t}
-                </option>
-              ))}
+              {defaultTimeSlots.map((t) => <option key={t}>{t}</option>)}
             </select>
           </div>
           <div className="col-12 d-grid">
@@ -125,9 +134,7 @@ const Scheduler = () => {
           <thead className="table-dark">
             <tr>
               <th>Time</th>
-              {weekDays.map((d) => (
-                <th key={d}>{d}</th>
-              ))}
+              {weekDays.map((d) => <th key={d}>{d}</th>)}
             </tr>
           </thead>
           <tbody>

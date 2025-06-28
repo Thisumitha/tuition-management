@@ -1,14 +1,26 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Modal, Button, Form } from "react-bootstrap";
+import axios from "axios";
 
 const Students = () => {
-  const [students, setStudents] = useState([
-    { id: 1, fullName: "Nimal Perera", email: "nimal@email.com", phone: "0771234567", subject: "Math" },
-    { id: 2, fullName: "Kamal Silva", email: "kamal@email.com", phone: "0717654321", subject: "Science" },
-  ]);
-
+  const [students, setStudents] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [currentStudent, setCurrentStudent] = useState(null);
+
+  // Base URL of your Spring Boot backend
+  const baseURL = "http://localhost:8080/api/students";
+
+  // Fetch students on component mount
+  useEffect(() => {
+    fetchStudents();
+  }, []);
+
+  const fetchStudents = () => {
+    axios
+      .get(baseURL)
+      .then((res) => setStudents(res.data))
+      .catch((err) => console.error("Failed to fetch students:", err));
+  };
 
   const handleEdit = (student) => {
     setCurrentStudent(student);
@@ -17,7 +29,13 @@ const Students = () => {
 
   const handleDelete = (id) => {
     if (window.confirm("Are you sure you want to delete this student?")) {
-      setStudents(students.filter((s) => s.id !== id));
+      axios
+        .delete(`${baseURL}/${id}`)
+        .then(() => {
+          alert("Student deleted ✅");
+          fetchStudents();
+        })
+        .catch((err) => alert("Failed to delete ❌"));
     }
   };
 
@@ -27,10 +45,14 @@ const Students = () => {
   };
 
   const handleSave = () => {
-    setStudents((prev) =>
-      prev.map((s) => (s.id === currentStudent.id ? currentStudent : s))
-    );
-    setShowModal(false);
+    axios
+      .put(`${baseURL}/${currentStudent.id}`, currentStudent)
+      .then(() => {
+        alert("Student updated ✅");
+        setShowModal(false);
+        fetchStudents();
+      })
+      .catch((err) => alert("Failed to update ❌"));
   };
 
   return (

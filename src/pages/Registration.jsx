@@ -1,4 +1,6 @@
 import { useState } from "react";
+import axios from "axios";
+
 
 // Reuse the student and teacher form code
 const StudentForm = ({ onBack }) => {
@@ -16,11 +18,26 @@ const StudentForm = ({ onBack }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Student Registered:", formData);
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await axios.post("http://localhost:8080/api/students", formData);
+    console.log("Student Registered:", res.data);
     alert("🎉 Student Registered Successfully!");
-  };
+    setFormData({
+      fullName: "",
+      email: "",
+      phone: "",
+      dob: "",
+      gender: "",
+      subject: ""
+    });
+  } catch (err) {
+    console.error("Registration Failed:", err);
+    alert("❌ Student registration failed!");
+  }
+};
+
 
   return (
     <div className="container py-5 d-flex justify-content-center">
@@ -80,11 +97,24 @@ const TeacherForm = ({ onBack }) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    console.log("Teacher Registered:", formData);
+  const handleSubmit = async (e) => {
+  e.preventDefault();
+  try {
+    const res = await axios.post("http://localhost:8080/api/teachers", formData);
+    console.log("Teacher Registered:", res.data);
     alert("🎉 Teacher Registered Successfully!");
-  };
+    setFormData({
+      name: "",
+      subject: "",
+      email: "",
+      phone: ""
+    });
+  } catch (err) {
+    console.error("Registration Failed:", err);
+    alert("❌ Teacher registration failed!");
+  }
+};
+
 
   return (
     <div className="container py-5 d-flex justify-content-center">
