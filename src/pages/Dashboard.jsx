@@ -4,12 +4,24 @@ import axios from "axios";
 
 const Dashboard = () => {
   const [studentCount, setStudentCount] = useState(0);
+  const [totalProfit, setTotalProfit] = useState(0); // Profit value
+  const [pendingPayments, setPendingPayments] = useState(0); // From teachers' wallets
 
   useEffect(() => {
-    // Fetch student count from backend
+    // Fetch student count
     axios.get("http://localhost:8080/api/students/count")
       .then(res => setStudentCount(res.data))
-      .catch(err => console.error("Failed to fetch student count:", err));
+      .catch(err => console.error("❌ Failed to fetch student count:", err));
+
+    // Fetch total profit (optional API if you plan to implement)
+    axios.get("http://localhost:8080/api/admins/profit")
+      .then(res => setTotalProfit(res.data))
+      .catch(err => console.warn("⚠️ Profit endpoint not ready, using static fallback"));
+
+    // Fetch total pending teacher wallet balances
+    axios.get("http://localhost:8080/api/teachers/wallets/total")
+      .then(res => setPendingPayments(res.data))
+      .catch(err => console.error("❌ Failed to fetch pending payments:", err));
   }, []);
 
   return (
@@ -31,19 +43,21 @@ const Dashboard = () => {
                 </div>
               </div>
             </div>
+
             <div className="col-md-4">
               <div className="card text-white bg-success h-100 shadow">
                 <div className="card-body text-center">
-                  <h5 className="card-title">Fees Collected</h5>
-                  <p className="card-text fs-3 fw-bold">$12,000</p> {/* You can make this dynamic too */}
+                  <h5 className="card-title">Profit</h5>
+                  <p className="card-text fs-3 fw-bold">Rs.{totalProfit.toFixed(2)}</p>
                 </div>
               </div>
             </div>
+
             <div className="col-md-4">
               <div className="card text-white bg-danger h-100 shadow">
                 <div className="card-body text-center">
                   <h5 className="card-title">Pending Payments</h5>
-                  <p className="card-text fs-3 fw-bold">$3,000</p> {/* You can fetch from backend later */}
+                  <p className="card-text fs-3 fw-bold">Rs.{pendingPayments.toFixed(2)}</p>
                 </div>
               </div>
             </div>

@@ -8,23 +8,20 @@ import Registration from "./pages/Registration";
 import Shedular from "./pages/Shedular";
 import Navbar from "./components/Navbar";
 import Login from "./pages/login";
+import PrivateRoute from "./components/PrivateRoute"; 
 function App() {
   return (
     <BrowserRouter>
-    <Navbar />
-
+      <Navbar /> 
       <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/students" element={<Students />} />
-        <Route path="/register" element={<Registration />} />
-        <Route path="/payments" element={<Payments />} />
-        <Route path="/attendance" element={<Attendance />} />
-        <Route path="/report" element={<Report />} />
-        <Route path="/shedular" element={<Shedular />} />
         <Route path="/login" element={<Login />} />
-        {/* Add more routes as needed */}
-
-
+        <Route path="/" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+        <Route path="/students" element={<PrivateRoute><Students /></PrivateRoute>} />
+        <Route path="/register" element={<PrivateRoute><Registration /></PrivateRoute>} />
+        <Route path="/payments" element={<PrivateRoute><Payments /></PrivateRoute>} />
+        <Route path="/attendance" element={<PrivateRoute><Attendance /></PrivateRoute>} />
+        <Route path="/report" element={<PrivateRoute><Report /></PrivateRoute>} />
+        <Route path="/shedular" element={<PrivateRoute><Shedular /></PrivateRoute>} />
       </Routes>
     </BrowserRouter>
   );

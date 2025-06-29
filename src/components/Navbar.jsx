@@ -19,9 +19,8 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("loggedIn");
-    window.dispatchEvent(new Event("storage")); // 🔄 notify state change
-    navigate("/login");
+     localStorage.removeItem("loggedIn");
+  window.location.href = "/login";
   };
 
   return (

@@ -1,15 +1,18 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import 'bootstrap/dist/css/bootstrap.min.css'; // Ensure Bootstrap CSS is imported for modals
+import 'bootstrap/dist/css/bootstrap.min.css';
 
 const Payment = () => {
     const [selected, setSelected] = useState(null);
     const [students, setStudents] = useState([]);
     const [teachers, setTeachers] = useState([]);
     const [showPaymentModal, setShowPaymentModal] = useState(false);
+    const [showTeacherPayModal, setShowTeacherPayModal] = useState(false);
     const [currentStudentId, setCurrentStudentId] = useState(null);
+    const [currentTeacherId, setCurrentTeacherId] = useState(null);
     const [paymentAmount, setPaymentAmount] = useState('');
-    const [studentWalletBalance, setStudentWalletBalance] = useState(0); // To display current wallet balance
+    const [studentWalletBalance, setStudentWalletBalance] = useState(0);
+    const [teacherWalletAmount, setTeacherWalletAmount] = useState(0);
 
     const fetchStudents = () => {
         axios.get("http://localhost:8080/api/students/unpaid")
@@ -18,8 +21,7 @@ const Payment = () => {
     };
 
     const fetchTeachers = () => {
-        // Assuming this endpoint is correct for teachers, otherwise it also needs adjustment.
-        axios.get("http://localhost:8080/api/payment/teachers/earnings")
+        axios.get("http://localhost:8080/api/teachers/wallets")
             .then(res => setTeachers(res.data))
             .catch(err => console.error(err));
     };
@@ -32,7 +34,7 @@ const Payment = () => {
     const openPaymentModal = (studentId, walletBalance) => {
         setCurrentStudentId(studentId);
         setStudentWalletBalance(walletBalance);
-        setPaymentAmount(walletBalance.toFixed(2)); // Pre-fill with the full due amount
+        setPaymentAmount(walletBalance.toFixed(2));
         setShowPaymentModal(true);
     };
 
@@ -52,16 +54,48 @@ const Payment = () => {
         const amountToPay = parseFloat(paymentAmount);
 
         axios.post(`http://localhost:8080/api/students/pay/${currentStudentId}`, null, {
-            params: { amount: amountToPay } // Send amount as a query parameter
+            params: { amount: amountToPay }
         })
         .then(() => {
             alert(`✅ Payment of $${amountToPay.toFixed(2)} marked as completed.`);
-            fetchStudents(); // refresh the table
+            fetchStudents();
             closePaymentModal();
         })
         .catch(err => {
             console.error(err);
             alert("❌ Failed to process payment.");
+        });
+    };
+
+    const openTeacherPayModal = (teacherId, walletAmount) => {
+        setCurrentTeacherId(teacherId);
+        setTeacherWalletAmount(walletAmount);
+        setShowTeacherPayModal(true);
+    };
+
+    const closeTeacherPayModal = () => {
+        setShowTeacherPayModal(false);
+        setCurrentTeacherId(null);
+        setTeacherWalletAmount(0);
+    };
+
+    const handlePayTeacher = () => {
+        if (teacherWalletAmount <= 0) {
+            alert("Teacher wallet balance must be positive to pay.");
+            return;
+        }
+
+        axios.post(`http://localhost:8080/api/teachers/pay/${currentTeacherId}`, null, {
+            params: { amount: teacherWalletAmount }
+        })
+        .then(() => {
+            alert(`✅ Paid $${teacherWalletAmount.toFixed(2)} to teacher.`);
+            fetchTeachers();
+            closeTeacherPayModal();
+        })
+        .catch(err => {
+            console.error(err);
+            alert("❌ Failed to pay teacher: " + (err.response?.data || err.message));
         });
     };
 
@@ -78,6 +112,7 @@ const Payment = () => {
                 </button>
             </div>
 
+            {/* Student Payments Table */}
             {selected === "student" && (
                 <div>
                     <h4 className="mb-3">🧑‍🎓 Students With Due Payments</h4>
@@ -100,6 +135,7 @@ const Payment = () => {
                                         <button
                                             className="btn btn-sm btn-warning"
                                             onClick={() => openPaymentModal(s.id, s.wallet)}
+                                            disabled={s.wallet <= 0}
                                         >
                                             Pay Now
                                         </button>
@@ -113,6 +149,7 @@ const Payment = () => {
                 </div>
             )}
 
+            {/* Teacher Wallet Table */}
             {selected === "teacher" && (
                 <div>
                     <h4 className="mb-3">👨‍🏫 Teachers Wallets</h4>
@@ -122,24 +159,34 @@ const Payment = () => {
                                 <th>#</th>
                                 <th>Teacher</th>
                                 <th>Wallet Balance</th>
+                                <th>Action</th>
                             </tr>
                         </thead>
                         <tbody>
                             {teachers.length > 0 ? teachers.map((t, i) => (
                                 <tr key={t.id}>
                                     <td>{i + 1}</td>
-                                    <td>{t.name}</td>
+                                    <td>{t.fullName}</td>
                                     <td>${t.wallet.toFixed(2)}</td>
+                                    <td>
+                                        <button
+                                            className="btn btn-sm btn-primary"
+                                            onClick={() => openTeacherPayModal(t.id, t.wallet)}
+                                            disabled={t.wallet <= 0}
+                                        >
+                                            Pay
+                                        </button>
+                                    </td>
                                 </tr>
                             )) : (
-                                <tr><td colSpan="3">No teacher data.</td></tr>
+                                <tr><td colSpan="4">No teacher data.</td></tr>
                             )}
                         </tbody>
                     </table>
                 </div>
             )}
 
-            {/* Payment Modal */}
+            {/* Student Payment Modal */}
             {showPaymentModal && (
                 <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
                     <div className="modal-dialog modal-dialog-centered">
@@ -166,6 +213,27 @@ const Payment = () => {
                             <div className="modal-footer">
                                 <button type="button" className="btn btn-secondary" onClick={closePaymentModal}>Close</button>
                                 <button type="button" className="btn btn-primary" onClick={handleProcessPayment}>Process Payment</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Teacher Payment Modal */}
+            {showTeacherPayModal && (
+                <div className="modal show d-block" tabIndex="-1" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+                    <div className="modal-dialog modal-dialog-centered">
+                        <div className="modal-content">
+                            <div className="modal-header">
+                                <h5 className="modal-title">Confirm Teacher Payment</h5>
+                                <button type="button" className="btn-close" onClick={closeTeacherPayModal}></button>
+                            </div>
+                            <div className="modal-body">
+                                <p>Pay <strong>${teacherWalletAmount.toFixed(2)}</strong> to teacher?</p>
+                            </div>
+                            <div className="modal-footer">
+                                <button className="btn btn-secondary" onClick={closeTeacherPayModal}>Cancel</button>
+                                <button className="btn btn-success" onClick={handlePayTeacher}>Confirm Pay</button>
                             </div>
                         </div>
                     </div>

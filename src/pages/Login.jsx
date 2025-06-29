@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom"; // ✅ Add this line
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -7,24 +8,29 @@ const Login = () => {
     password: "",
   });
 
-  const navigate = useNavigate(); // ✅ Add this
+  const navigate = useNavigate();
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData.email === "admin@test.com" && formData.password === "1234") {
-      localStorage.setItem("loggedIn", "true");
+    try {
+      const res = await axios.post("http://localhost:8080/api/admins/login", formData);
+      const admin = res.data;
 
-    // 🔄 Trigger login state update
-    window.dispatchEvent(new Event("storage"));
+      // ✅ Save login info
+      localStorage.setItem("loggedIn", "true");
+      localStorage.setItem("adminName", admin.username);
+      localStorage.setItem("adminEmail", admin.email);
+
+      window.dispatchEvent(new Event("storage"));
       alert("✅ Login success!");
-      navigate("/"); // ✅ Redirect to Dashboard
-      
-    } else {
+      navigate("/");
+    } catch (err) {
+      console.error(err);
       alert("❌ Invalid credentials");
     }
   };
